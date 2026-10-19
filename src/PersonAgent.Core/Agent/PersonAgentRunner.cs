@@ -1,6 +1,6 @@
+using LangChain.Chains;
 using PersonAgent.Http;
 using PersonAgent.Tools;
-using static LangChain.Chains.Chain;
 
 namespace PersonAgent.Agent;
 
@@ -41,13 +41,13 @@ public sealed class PersonAgentRunner
 
         try
         {
-            var executor = ReActAgentExecutor(_chatClient, _prompt, maxActions: _maxActions)
+            var executor = LangChainAgentExecutor.Create(_chatClient, _prompt, _maxActions)
                 .UseTool(new CreatePersonTool(_apiClient, _logger, trace))
                 .UseTool(new GetPersonTool(_apiClient, _logger, trace))
                 .UseTool(new UpdatePersonTool(_apiClient, _logger, trace))
                 .UseTool(new ListPersonsTool(_apiClient, _logger, trace));
 
-            var chain = Set(userText) | executor;
+            var chain = Chain.Set(userText) | executor;
             var modelAnswer = await chain.RunAsync("text", cancellationToken: cancellationToken).ConfigureAwait(false);
             var result = ResponseFormatter.FromExecutions(trace, modelAnswer);
             LogOutcome(result);
