@@ -4,7 +4,7 @@
 
 ## Что сделано
 
-Консоль принимает фразу аргументом или спрашивает её при старте, отсекает текст короче 3 и длиннее 500 символов и передаёт остальное в `LangChainAgentExecutor`. Это проектная обёртка над библиотечным методом `LangChain.Chains.Chain.ReActAgentExecutor` (пакет LangChain 0.17.1). Агент выбирает один из четырёх tool. Tool проверяет JSON-аргументы и сам делает HTTP-вызов в API. API хранит физлиц в памяти процесса и публикует Swagger. Ответ человеку собирается из результата tool в четырёх строках, без сырого JSON.
+Консоль принимает фразу аргументом или спрашивает её при старте, отсекает текст короче 3 и длиннее 500 символов и передаёт остальное в `Chain.ReActAgentExecutor` (пакет LangChain 0.17.1). Агент выбирает один из четырёх tool. Tool проверяет JSON-аргументы и сам делает HTTP-вызов в API. API хранит физлиц в памяти процесса и публикует Swagger. Ответ человеку собирается из результата tool в четырёх строках, без сырого JSON.
 
 Вызов HTTP внутри tool, а не отдельным диспетчером консоли, — решение из `Plan.Step1.md`. Так выполняется критерий преподавателя «tool делает реальный HTTP-вызов», а контракт автора `{ "name", "args" }` остаётся внутри tool и в логе. Свободный JSON с произвольным именем или URL не исполняется.
 
@@ -144,7 +144,7 @@ Errors: недостаточно данных для вызова инструм
 | Лог контракта | `src/PersonAgent.Core/Tools/PersonApiTool.cs:40-44` |
 | Лог результата tool | `src/PersonAgent.Core/Tools/PersonApiTool.cs:46-71` |
 | Лог HTTP-метода и статуса | `src/PersonAgent.Core/Http/PersonApiClient.cs:55-58` |
-| Сборка агента | `src/PersonAgent.Core/Agent/LangChainAgentExecutor.cs:7-9`, `src/PersonAgent.Core/Agent/PersonAgentRunner.cs:42-52` |
+| Сборка агента | `src/PersonAgent.Core/Agent/PersonAgentRunner.cs:42-52` |
 | Формат ответа `Status` / `Action` / `Data` / `Errors` | `Prompts/system.prompt:40-43`, `src/PersonAgent.Core/Agent/ResponseFormatter.cs:112-115` |
 | Маршруты API | `src/PersonApi/Endpoints/PersonEndpoints.cs:9-34` |
 | Swagger | `src/PersonApi/Program.cs:8-25` |
@@ -165,7 +165,7 @@ Errors: недостаточно данных для вызова инструм
 
 Задание преподавателя говорит про `requirements.txt` или `pyproject.toml`. Проект на C#, поэтому список версий — `Directory.Packages.props`, а полное дерево — `packages.lock.json`. Команда запуска — `dotnet run`, не `python main.py`. Таблица соответствия — в `requirements.md`.
 
-Агент не заменён другим фреймворком. Используется LangChain 0.17.1: библиотечный метод `LangChain.Chains.Chain.ReActAgentExecutor` вызывается из проектной обёртки `LangChainAgentExecutor`, tool наследуют `AgentTool`. Пакет `Ollama` 1.15, который идёт вместе с LangChain, не реализует `Microsoft.Extensions.AI.IChatClient` (так записано в исходниках LangChain на теге v0.17.1). Поэтому рядом лежит короткий `OllamaChatClient`: он только доставляет текст в `POST {OLLAMA_BASE_URL}/api/chat` и возвращает ответ в тот интерфейс, которого ждёт LangChain. Выбор tool, цикл Observation и разбор Action остаётся библиотечным.
+Агент не заменён другим фреймворком. Используется LangChain 0.17.1, метод `LangChain.Chains.Chain.ReActAgentExecutor` и базовый `AgentTool`. Пакет `Ollama` 1.15, который идёт вместе с LangChain, не реализует `Microsoft.Extensions.AI.IChatClient` (так записано в исходниках LangChain на теге v0.17.1). Поэтому рядом лежит короткий `OllamaChatClient`: он только доставляет текст в `POST {OLLAMA_BASE_URL}/api/chat` и возвращает ответ в тот интерфейс, которого ждёт LangChain. Выбор tool, цикл Observation и разбор Action остаётся библиотечным.
 
 Context7 для сверки документации в этой среде потребовал отдельный вход, поэтому версии сверены по NuGet и исходникам тега `v0.17.1` репозитория tryAGI/LangChain.
 
