@@ -1,0 +1,31 @@
+name: langchain-person
+
+services:
+  person-api:
+    build:
+      context: .
+      dockerfile: src/PersonApi/Dockerfile
+    image: langchain-person-api:local
+    ports:
+      - "5080:5080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5080
+
+  person-agent:
+    profiles: ["cli"]
+    build:
+      context: .
+      dockerfile: src/PersonAgent.Console/Dockerfile
+    image: langchain-person-agent:local
+    depends_on:
+      - person-api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      PersonApi__BaseUrl: http://person-api:5080
+      Ollama__BaseUrl: http://host.docker.internal:11434
+      Ollama__Model: qwen3.5:4b
+      Llm__Provider: Ollama
+    stdin_open: false
+    tty: false

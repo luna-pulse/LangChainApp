@@ -31,9 +31,9 @@ flowchart LR
 
 ## Требования
 
-- .NET SDK 10 (текущая LTS). В этой среде проверено на SDK 10.0.402.
-- Запущенный [Ollama](https://ollama.com/) и скачанная модель, если нужен живой ответ модели. Для `dotnet test` Ollama не нужен.
-- Отдельный терминал с Minimal API, если консоль ходит в API по сети.
+- Для запуска SDK на машине не нужен: оба приложения собираются в Docker. Точная версия сборки — SDK `10.0.402`, она зафиксирована в `global.json` (`rollForward: disable`).
+- Запущенный [Ollama](https://ollama.com/) и модель `qwen3.5:4b`. Контейнер агента обращается к Ollama на хосте.
+- Порядок запуска для проверяющего агента — [Launch.md](Launch.md). Команды `dotnet` ниже нужны только там, где SDK `10.0.402` уже установлен.
 
 Версии NuGet зафиксированы в `Directory.Packages.props`, фактическое дерево — в `packages.lock.json`. Это замена Python-файлов `requirements.txt` / `pyproject.toml`: см. [requirements.md](requirements.md).
 
@@ -73,6 +73,8 @@ cp .env.example .env
 `LLM_PROVIDER=OpenAICompatible` переключает консоль на любой OpenAI-совместимый endpoint (`/v1/chat/completions`), в том числе Ollama по адресу `http://localhost:11434/v1`. Для локальной Ollama этот режим не обязателен: штатный путь — нативный `/api/chat`.
 
 ## Запуск
+
+Проверка на машине без .NET SDK выполняется командами из [Launch.md](Launch.md): Docker и локальная Ollama. Команды ниже — для разработки при установленном SDK `10.0.402`.
 
 Два процесса. Сначала API:
 

@@ -13,6 +13,8 @@
 
 ## Команды
 
+Запуск для проверяющего — Docker и локальная Ollama, строго по `Launch.md`. Хостовый SDK для этого не нужен. Команды `dotnet` ниже требуют SDK `10.0.402` из `global.json`.
+
 ```bash
 dotnet build
 dotnet test
