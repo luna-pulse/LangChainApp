@@ -7,46 +7,6 @@ using PersonAgent.Http;
 
 namespace PersonAgent.Tests;
 
-internal sealed class ScriptedChatClient : IChatClient
-{
-    private readonly Queue<string> _responses;
-
-    public ScriptedChatClient(params string[] responses)
-    {
-        _responses = new Queue<string>(responses);
-    }
-
-    public List<string> Prompts { get; } = [];
-
-    public int Calls => Prompts.Count;
-
-    public Task<ChatResponse> GetResponseAsync(
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
-    {
-        Prompts.Add(string.Join("\n", messages.Select(message => message.Text)));
-        if (_responses.Count == 0)
-        {
-            throw new InvalidOperationException("Скрипт модели закончился.");
-        }
-
-        return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, _responses.Dequeue())));
-    }
-
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
-
-    public object? GetService(Type serviceType, object? serviceKey = null) => null;
-
-    public void Dispose()
-    {
-    }
-}
-
 internal sealed class ThrowingChatClient : IChatClient
 {
     private readonly Exception _exception;
@@ -138,13 +98,13 @@ internal static class TestHost
 {
     public static string Prompt => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Prompts", "system.prompt"));
 
-    public static (PersonAgentRunner Runner, ScriptedChatClient Chat, CollectingLoggerProvider Logs, HttpClient Http) Create(
+    public static (PersonAgentRunner Runner, FakeChatClient Chat, CollectingLoggerProvider Logs, HttpClient Http) Create(
         HttpClient http,
         params string[] responses)
     {
         var logs = new CollectingLoggerProvider();
         var factory = LoggerFactory.Create(builder => builder.AddProvider(logs));
-        var chat = new ScriptedChatClient(responses);
+        var chat = new FakeChatClient(responses);
         var runner = new PersonAgentRunner(
             chat,
             new PersonApiClient(http, factory.CreateLogger<PersonApiClient>()),

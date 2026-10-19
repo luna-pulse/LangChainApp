@@ -12,7 +12,7 @@
 | `src/PersonAgent.Core` | LangChain ReAct-агент, четыре tool, HTTP-клиент, формат ответа. |
 | `src/PersonAgent.Console` | Ввод пользователя и запуск агента. |
 | `tests/PersonApi.Tests` | Интеграционные тесты API. |
-| `tests/PersonAgent.Tests` | Путь агент → tool → HTTP на скриптовой модели и opt-in тест живой модели. |
+| `tests/PersonAgent.Tests` | Путь агент → tool → HTTP на тестовом двойнике `FakeChatClient` и opt-in тест живой модели. |
 
 ```mermaid
 flowchart LR
@@ -41,7 +41,7 @@ flowchart LR
 
 ```bash
 ollama serve
-ollama pull llama3.1
+ollama pull qwen3.5:4b
 cp .env.example .env
 ```
 
@@ -51,7 +51,7 @@ cp .env.example .env
 | --- | --- |
 | API | `http://localhost:5080` |
 | Ollama | `http://localhost:11434` |
-| Модель | `llama3.1` |
+| Модель | `qwen3.5:4b` |
 
 Адрес API — корень сервера Ollama, без `/api` и без `/v1`. Клиент сам вызывает `POST /api/chat`. Ключ не используется.
 
@@ -167,7 +167,7 @@ Errors: нет
 dotnet test
 ```
 
-Ollama и сеть наружу не нужны. Модель в основных тестах заменена скриптом `ScriptedChatClient`, который возвращает заранее заданный текст ReAct. HTTP идёт в тестовый сервер API.
+Ollama и сеть наружу не нужны. Модель в основных тестах заменена двойником `FakeChatClient`, который возвращает заранее заданный текст ReAct. HTTP идёт в тестовый сервер API.
 
 Тот же прогон выполняет GitHub Actions: `.github/workflows/ci.yml`. Workflow стартует на каждый push любой ветки и на pull request, ставит SDK из `global.json`, делает `dotnet restore --locked-mode`, затем сборку и `dotnet test`. Живой LLM-тест в CI пропускается, потому что переменные `LLM_INTEGRATION_*` там не заданы.
 
@@ -175,7 +175,7 @@ Ollama и сеть наружу не нужны. Модель в основны�
 
 ```bash
 export LLM_INTEGRATION_BASE_URL=http://localhost:11434/v1
-export LLM_INTEGRATION_MODEL=llama3.1
+export LLM_INTEGRATION_MODEL=qwen3.5:4b
 export LLM_INTEGRATION_API_KEY=ollama
 dotnet test --filter LiveModel_CreatePerson_WhenConfigured
 ```
@@ -187,9 +187,9 @@ dotnet test --filter LiveModel_CreatePerson_WhenConfigured
 | Симптом | Что проверить |
 | --- | --- |
 | `Ollama недоступен` | `ollama serve`, адрес `OLLAMA_BASE_URL` без `/api` |
-| Модель не найдена | `ollama pull llama3.1` или другое имя в `OLLAMA_MODEL` |
+| Модель не найдена | `ollama pull qwen3.5:4b` или другое имя в `OLLAMA_MODEL` |
 | `API недоступен` | Сначала запущен `src/PersonApi`, порт совпадает с `PERSON_API_BASE_URL` |
-| `модель вернула ответ не в формате ReAct` | Модель слабая для формата Thought/Action. Попробуйте `llama3.1` или другую инструкционную модель |
+| `модель вернула ответ не в формате ReAct` | Модель слабая для формата Thought/Action. Попробуйте `qwen3.5:4b` или другую инструкционную модель |
 | `длина текста превышает 500 символов` | Сократите запрос. Модель при этом не вызывается |
 | `Физлицо не найдено` | id есть в текущем процессе API. После перезапуска API хранилище пустое |
 | В ответе `error`, хотя казалось, что всё вышло | Смотрите поле `Errors`. Успех не печатается без успешного tool |

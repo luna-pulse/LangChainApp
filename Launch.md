@@ -6,10 +6,10 @@
 
 ```bash
 ollama serve
-ollama pull llama3.1
+ollama pull qwen3.5:4b
 ```
 
-Адрес по умолчанию: `http://localhost:11434`. Имя модели по умолчанию: `llama3.1`. Ключ API не нужен.
+Адрес по умолчанию: `http://localhost:11434`. Имя модели по умолчанию: `qwen3.5:4b`. Ключ API не нужен.
 
 Другая модель или другой компьютер:
 
@@ -62,7 +62,7 @@ dotnet test
 
 ```bash
 export LLM_INTEGRATION_BASE_URL=http://localhost:11434/v1
-export LLM_INTEGRATION_MODEL=llama3.1
+export LLM_INTEGRATION_MODEL=qwen3.5:4b
 export LLM_INTEGRATION_API_KEY=ollama
 dotnet test --filter LiveModel_CreatePerson_WhenConfigured
 ```

@@ -26,7 +26,7 @@ public sealed class LlmClientTests
             },
         };
         using var http = new HttpClient(handler);
-        var client = new OllamaChatClient(http, "http://localhost:11434", "llama3.1");
+        var client = new OllamaChatClient(http, "http://localhost:11434", "qwen3.5:4b");
 
         var response = await client.GetResponseAsync(
             [new(ChatRole.User, "покажи список")],
@@ -41,7 +41,7 @@ public sealed class LlmClientTests
     public async Task OllamaClient_WhenUnreachable_ReportsUnavailable()
     {
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
-        var client = new OllamaChatClient(http, "http://127.0.0.1:9", "llama3.1");
+        var client = new OllamaChatClient(http, "http://127.0.0.1:9", "qwen3.5:4b");
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             client.GetResponseAsync([new(ChatRole.User, "ping")]));
@@ -74,7 +74,9 @@ public sealed class LlmClientTests
     [Fact]
     public void Factory_SelectsOllamaByDefault_AndOpenAiWhenConfigured()
     {
-        using var ollama = Assert.IsType<OllamaChatClient>(ChatClientFactory.Create(new OllamaSettings(), new LlmSettings()));
+        var ollamaSettings = new OllamaSettings();
+        Assert.Equal("qwen3.5:4b", ollamaSettings.Model);
+        using var ollama = Assert.IsType<OllamaChatClient>(ChatClientFactory.Create(ollamaSettings, new LlmSettings()));
         Assert.Equal("http://localhost:11434/api/chat", ollama.Endpoint.ToString());
 
         using var compatible = Assert.IsType<OpenAiCompatibleChatClient>(ChatClientFactory.Create(

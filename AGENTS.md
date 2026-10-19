@@ -20,7 +20,7 @@ dotnet run --project src/PersonApi
 dotnet run --project src/PersonAgent.Console -- "Создай физлицо: фамилия Иванов, имя Иван"
 ```
 
-`dotnet test` не требует Ollama. Живой LLM-тест включается только переменными `LLM_INTEGRATION_BASE_URL` и `LLM_INTEGRATION_MODEL`.
+`dotnet test` не требует Ollama. Модель в тестах агента — `FakeChatClient` с заготовленными ответами. Живой LLM-тест включается только переменными `LLM_INTEGRATION_BASE_URL` и `LLM_INTEGRATION_MODEL`.
 
 CI — `.github/workflows/ci.yml`. Он запускается на каждый push и на pull request: SDK из `global.json`, `dotnet restore PersonAgent.slnx --locked-mode`, `dotnet build`, `dotnet test`. Opt-in тест живой модели в CI пропускается. Локально ту же проверку зависимостей даёт `dotnet restore --locked-mode`.
 
@@ -40,7 +40,9 @@ CI — `.github/workflows/ci.yml`. Он запускается на каждый
 
 Секретов в репозитории нет. Ollama работает без ключа. Не коммитить `.env`. Шаблон — `.env.example`.
 
-Адрес Ollama — корень сервера (`http://localhost:11434`), не `/api/chat`. Адрес API — `http://localhost:5080`.
+Адрес Ollama — корень сервера (`http://localhost:11434`), не `/api/chat`. Модель по умолчанию — `qwen3.5:4b`. Адрес API — `http://localhost:5080`.
+
+Минимальный уровень логов — `Debug`. `Trace` не используется. У консоли логи пишутся в stderr, четыре строки ответа — в stdout.
 
 ## Стиль
 

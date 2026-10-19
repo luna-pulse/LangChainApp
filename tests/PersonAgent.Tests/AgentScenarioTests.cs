@@ -437,14 +437,14 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
         var values = EnvFile.Parse("""
             # комментарий
             OLLAMA_BASE_URL=http://localhost:11434
-            OLLAMA_MODEL="llama3.1"
+            OLLAMA_MODEL="qwen3.5:4b"
             PERSON_API_BASE_URL=http://localhost:5080
 
             LLM_API_KEY=
             """);
 
         Assert.Equal("http://localhost:11434", values["Ollama__BaseUrl"]);
-        Assert.Equal("llama3.1", values["Ollama__Model"]);
+        Assert.Equal("qwen3.5:4b", values["Ollama__Model"]);
         Assert.Equal("http://localhost:5080", values["PersonApi__BaseUrl"]);
         Assert.False(values.ContainsKey("LLM_API_KEY"));
     }

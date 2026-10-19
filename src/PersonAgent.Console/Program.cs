@@ -18,10 +18,11 @@ var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
     Args = [],
     ContentRootPath = AppContext.BaseDirectory,
 });
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 builder.Logging.AddConsole();
 builder.Services.Configure<ConsoleLoggerOptions>(options =>
 {
-    options.LogToStandardErrorThreshold = LogLevel.Trace;
+    options.LogToStandardErrorThreshold = LogLevel.Debug;
 });
 
 var configuration = builder.Configuration;
