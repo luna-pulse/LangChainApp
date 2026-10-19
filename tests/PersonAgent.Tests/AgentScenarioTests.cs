@@ -364,7 +364,11 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public async Task EmptyInput_DoesNotCallModel(string? input)
+    [InlineData("а")]
+    [InlineData("аб")]
+    [InlineData(" а ")]
+    [InlineData("  аб")]
+    public async Task TooShortInput_DoesNotCallModel(string? input)
     {
         var handler = new RecordingHandler();
         using var http = new HttpClient(handler) { BaseAddress = new Uri("http://persons.local/") };
@@ -372,8 +376,27 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
 
         var result = await runner.RunAsync(input);
 
-        Assert.Contains("пустой ввод", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Errors: Укажите текст от 3 до 500 символов", result.Text, StringComparison.Ordinal);
         Assert.Equal(0, chat.Calls);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task InputAtMinimum_CallsModel()
+    {
+        var handler = new RecordingHandler();
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("http://persons.local/") };
+        var (runner, chat, _, _) = TestHost.Create(
+            http,
+            """
+            Thought: вопрос
+            Final Answer: Уточните, какое действие выполнить?
+            """);
+
+        var result = await runner.RunAsync("абв");
+
+        Assert.Equal(1, chat.Calls);
+        Assert.Contains("уточнение", result.Text, StringComparison.Ordinal);
         Assert.Empty(handler.Requests);
     }
 

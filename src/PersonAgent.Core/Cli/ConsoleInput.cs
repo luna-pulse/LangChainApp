@@ -9,7 +9,7 @@ public static class ConsoleInput
             return string.Join(' ', args);
         }
 
-        writeLine("Введите запрос (не больше 500 символов):");
+        writeLine("Введите запрос (от 3 до 500 символов):");
         return readLine();
     }
 }
