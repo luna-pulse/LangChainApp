@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PersonAgent.Console/PersonAgent.Console.csproj" />
+    <Project Path="src/PersonAgent.Core/PersonAgent.Core.csproj" />
+    <Project Path="src/PersonApi/PersonApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PersonAgent.Tests/PersonAgent.Tests.csproj" />
+    <Project Path="tests/PersonApi.Tests/PersonApi.Tests.csproj" />
+  </Folder>
+</Solution>
