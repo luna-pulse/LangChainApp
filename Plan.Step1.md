@@ -5,7 +5,7 @@
 - Создать solution с двумя запускаемыми проектами и тестами: `src/PersonAgent.Console`, `src/PersonApi`, `tests`.
 - Использовать Ollama по `http://localhost:11434`; адрес API, адрес Ollama и имя модели вынести в конфигурацию/переменные окружения и описать в `.env.example` без секретов.
 - Реализовать четыре фиксированных инструмента: `CreatePerson`, `GetPerson`, `UpdatePerson`, `ListPersons`. Каждый LangChain tool валидирует типизированные аргументы и через общий HTTP-клиент вызывает только соответствующий endpoint Minimal API.
-- Считать tool call структурированным контрактом `{ "name": "...", "args": { ... } }`; не исполнять произвольные имена/URL. Итог пользователю формировать по `Prompts/system.prompt` как `Статус / Действие / Результат / Ошибка`.
+- Считать tool call структурированным контрактом `{ "name": "...", "args": { ... } }`; не исполнять произвольные имена/URL. Итог пользователю формировать по `Prompts/system.prompt` как `Status / Action / Data / Errors`.
 
 ```mermaid
 flowchart LR

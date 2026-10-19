@@ -25,7 +25,9 @@
 
 ## Сценарии
 
-Модель в этих прогонах скриптовая: она возвращает заданный ReAct-текст, а HTTP выполняется по-настоящему в тестовый сервер API. Так проверяется путь tool → HTTP без локальной Ollama. Тесты: `tests/PersonAgent.Tests/AgentScenarioTests.cs`.
+Пять сценариев ниже выполнены **скриптовым двойником модели**, а не живой Ollama и не другой настоящей LLM. Двойник — `ScriptedChatClient` в `tests/PersonAgent.Tests/Support.cs`: он отдаёт заранее записанный текст ReAct. HTTP при этом настоящий: tool ходит в тестовый сервер API (`WebApplicationFactory`). Так проверяется путь агент → tool → HTTP без демона Ollama. Код сценариев: `tests/PersonAgent.Tests/AgentScenarioTests.cs`.
+
+Живой прогон этих сценариев на Ollama в отчёт не входил. Его добавляет владелец в разделе «Живая модель на Ollama — заполняет владелец».
 
 ### 1. Создание, реальный HTTP
 
@@ -36,10 +38,10 @@
 Ответ:
 
 ```text
-Статус: success
-Действие: CreatePerson
-Результат: Готово. Физлицо создано. Идентификатор: 1.
-Ошибка: нет
+Status: success
+Action: CreatePerson
+Data: Готово. Физлицо создано. Идентификатор: 1.
+Errors: нет
 ```
 
 Идентификатор зависит от уже созданных записей. В API после вызова есть физлицо с фамилией Иванов. Фрагмент лога:
@@ -58,10 +60,10 @@ HTTP ответ CreatePerson: 201
 Ожидаемый метод: `GetPerson`.
 
 ```text
-Статус: success
-Действие: GetPerson
-Результат: Физлицо найдено. Идентификатор: {id}, фамилия: Смирнов, имя: Пётр.
-Ошибка: нет
+Status: success
+Action: GetPerson
+Data: Физлицо найдено. Идентификатор: {id}, фамилия: Смирнов, имя: Пётр.
+Errors: нет
 ```
 
 ```text
@@ -75,10 +77,10 @@ HTTP GET persons/{id} для GetPerson
 Ожидаемый метод: `UpdatePerson`.
 
 ```text
-Статус: success
-Действие: UpdatePerson
-Результат: Готово. Данные физлица изменены
-Ошибка: нет
+Status: success
+Action: UpdatePerson
+Data: Готово. Данные физлица изменены
+Errors: нет
 ```
 
 Повторный `GET` возвращает фамилию Соколов. Фраза из ТЗ автора присутствует. Лог: `HTTP PUT persons/{id} для UpdatePerson`, `Результат инструмента UpdatePerson: HTTP 200, успех да`.
@@ -90,10 +92,10 @@ HTTP GET persons/{id} для GetPerson
 Методы по порядку: `CreatePerson`, затем `ListPersons`.
 
 ```text
-Статус: success
-Действие: CreatePerson; ListPersons
-Результат: Готово. Физлицо создано. Идентификатор: N. Список физлиц получен. Количество: M. ...
-Ошибка: нет
+Status: success
+Action: CreatePerson; ListPersons
+Data: Готово. Физлицо создано. Идентификатор: N. Список физлиц получен. Количество: M. ...
+Errors: нет
 ```
 
 Оба вызова дошли до HTTP. Модель вызывалась трижды: два действия и финальный ответ.
@@ -103,10 +105,10 @@ HTTP GET persons/{id} для GetPerson
 Запрос: «Создай физлицо».
 
 ```text
-Статус: error
-Действие: уточнение
-Результат: Укажите фамилию и имя физлица.
-Ошибка: недостаточно данных для вызова инструмента
+Status: error
+Action: уточнение
+Data: Укажите фамилию и имя физлица.
+Errors: недостаточно данных для вызова инструмента
 ```
 
 Запросов к API не было. Слова «Готово» в ответе нет.
@@ -116,7 +118,7 @@ HTTP GET persons/{id} для GetPerson
 | Проверка | Итог |
 | --- | --- |
 | «Удали физлицо 10» | tool не вызывается, в результате есть «не поддерживается» |
-| Action `DeletePerson` | `Статус: error`, действие «неизвестный инструмент», HTTP нет |
+| Action `DeletePerson` | `Status: error`, действие «неизвестный инструмент», HTTP нет |
 | В аргументах `url` | отказ до HTTP, текст про endpoint |
 | `CreatePerson` с `{}` | отказ «укажите фамилию», HTTP нет |
 | `GetPerson` id `999999` | реальный `404`, «Физлицо не найдено», без «Готово», даже если модель написала про успех |
@@ -134,16 +136,16 @@ HTTP GET persons/{id} для GetPerson
 
 | Что | Файл и строки |
 | --- | --- |
-| Объявление CreatePerson и вызов `CreateAsync` | `src/PersonAgent.Core/Tools/CreatePersonTool.cs:5-43` |
-| GetPerson и `GetAsync` | `src/PersonAgent.Core/Tools/GetPersonTool.cs:5-42` |
-| UpdatePerson и `UpdateAsync` | `src/PersonAgent.Core/Tools/UpdatePersonTool.cs:5-38` |
-| ListPersons и `ListAsync` | `src/PersonAgent.Core/Tools/ListPersonsTool.cs:5-42` |
-| Реальный `HttpClient.SendAsync` | `src/PersonAgent.Core/Http/PersonApiClient.cs:30-59` |
+| Объявление CreatePerson и вызов `CreateAsync` | `src/PersonAgent.Core/Tools/CreatePersonTool.cs:5-44` |
+| GetPerson и `GetAsync` | `src/PersonAgent.Core/Tools/GetPersonTool.cs:5-43` |
+| UpdatePerson и `UpdateAsync` | `src/PersonAgent.Core/Tools/UpdatePersonTool.cs:5-39` |
+| ListPersons и `ListAsync` | `src/PersonAgent.Core/Tools/ListPersonsTool.cs:5-43` |
+| Реальный `HttpClient.SendAsync` | `src/PersonAgent.Core/Http/PersonApiClient.cs:30-75` |
 | Лог контракта | `src/PersonAgent.Core/Tools/PersonApiTool.cs:40-44` |
 | Лог результата tool | `src/PersonAgent.Core/Tools/PersonApiTool.cs:46-71` |
 | Лог HTTP-метода и статуса | `src/PersonAgent.Core/Http/PersonApiClient.cs:55-58` |
 | Сборка агента | `src/PersonAgent.Core/Agent/PersonAgentRunner.cs:42-52` |
-| Формат ответа | `Prompts/system.prompt:40-43`, `src/PersonAgent.Core/Agent/ResponseFormatter.cs` |
+| Формат ответа `Status` / `Action` / `Data` / `Errors` | `Prompts/system.prompt:40-43`, `src/PersonAgent.Core/Agent/ResponseFormatter.cs:112-115` |
 | Маршруты API | `src/PersonApi/Endpoints/PersonEndpoints.cs:9-34` |
 | Swagger | `src/PersonApi/Program.cs:8-25` |
 
@@ -173,6 +175,18 @@ Cursor Composer из этого окружения как постоянный O
 
 Тот же режим можно включить у консоли: `LLM_PROVIDER=OpenAICompatible` плюс `LLM_BASE_URL` и `LLM_MODEL`.
 
+## Живая модель на Ollama — заполняет владелец
+
+Этот раздел пустой намеренно. Сюда владелец вставляет результаты прогона на настоящей локальной Ollama. Агент эти прогоны не выполнял: сценарии 1–5 выше сняты только со скриптового двойника `ScriptedChatClient`.
+
+| Сценарий | Запрос | Адрес и модель Ollama | Ответ (`Status` / `Action` / `Data` / `Errors`) | Заметка владельца |
+| --- | --- | --- | --- | --- |
+| 1. Создание | | | | |
+| 2. Получение | | | | |
+| 3. Изменение | | | | |
+| 4. Создание и список | | | | |
+| 5. Нехватка данных | | | | |
+
 ## Сверка с требованиями
 
 | Требование | Где | Как проверено | Статус |
@@ -181,29 +195,29 @@ Cursor Composer из этого окружения как постоянный O
 | API не генерируется моделью и не вшит в агент | отдельные проекты, фиксированные маршруты | код и тест Swagger на четыре операции | выполнено |
 | Ollama `http://localhost:11434`, без ключа, адрес и модель настраиваются | `appsettings.json`, `.env.example`, `OllamaChatClient` | тест разбора `/api/chat`; консоль печатает модель при старте | выполнено |
 | Лимит 500 символов до модели | `InputGuard`, `PersonAgentRunner` | тесты 0, 500 и 501 символа; ручной запуск консоли | выполнено |
-| Четыре операции: создать, получить, изменить, список | tools и маршруты API | сценарии 1–4 | выполнено |
-| Tool оформлен как LangChain tool и делает реальный HTTP | `AgentTool`, `HttpClient.SendAsync` | сценарии 1–4, лог HTTP | выполнено |
+| Четыре операции: создать, получить, изменить, список | tools и маршруты API | сценарии 1–4, скриптовый двойник LLM, HTTP настоящий | выполнено |
+| Tool оформлен как LangChain tool и делает реальный HTTP | `AgentTool`, `HttpClient.SendAsync` | сценарии 1–4, лог HTTP; модель скриптовая | выполнено |
 | Контракт `{name, args}`, чужие имена и URL запрещены | `ToolArguments`, `PersonApiClient.IsAllowedPath` | тесты DeletePerson, `url`, посторонний путь | выполнено |
-| Ответ не сырой JSON, для изменения — фраза «Готово. Данные физлица изменены» | `UpdatePersonTool`, `ResponseFormatter` | сценарий 3 | выполнено |
+| Ответ не сырой JSON, метки `Status` / `Action` / `Data` / `Errors`, для изменения — фраза «Готово. Данные физлица изменены» | `UpdatePersonTool`, `ResponseFormatter.cs:112-115`, `system.prompt:40-43` | сценарий 3 | выполнено |
 | Нет ложного успеха при ошибке, 404 и недоступном API | `ResponseFormatter` | тесты 404, закрытый порт, успех без tool | выполнено |
 | Несколько tool за один запрос | `maxActions`, сценарий 4 | два HTTP в одном прогоне | выполнено |
 | Нехватка данных и неподдерживаемая операция без tool | системный промпт и formatter | сценарий 5 и тест удаления | выполнено |
 | Валидация и коды 201/200/400/404, память потокобезопасна | `PersonValidator`, `InMemoryPersonStore` | 8 тестов API, в том числе 20 параллельных созданий | выполнено |
 | OpenAPI/Swagger | `Program.cs` | тест документа и curl UI | выполнено |
-| Минимум 5 запросов, минимум 3 с реальным tool | сценарии 1–5 | автотесты | выполнено |
+| Минимум 5 запросов, минимум 3 с реальным tool | сценарии 1–5 | автотесты со `ScriptedChatClient`, не живая модель | выполнено |
 | Промпты приложены | каталог `Prompts` | этот раздел | выполнено |
 | Секреты не коммитятся | `.gitignore` содержит `.env`, в примере ключей нет | просмотр `.env.example` | выполнено |
 | Зависимости зафиксированы | `Directory.Packages.props`, lock-файлы | restore при сборке | выполнено |
-| `dotnet build` и `dotnet test` | solution `PersonAgent.slnx` | 8 + 26 тестов прошли, 1 пропущен | выполнено |
+| `dotnet build` и `dotnet test` без Ollama | solution `PersonAgent.slnx`, `.github/workflows/ci.yml` | локально 8 + 26 тестов прошли, 1 пропущен; CI гоняет тот же набор на push и pull request | выполнено |
 | Интеграционные тесты не требуют Ollama автора | `ScriptedChatClient` | `dotnet test` без демона Ollama | выполнено |
 | Opt-in живая модель | `LlmClientTests.LiveModel_CreatePerson_WhenConfigured` | в прогоне статус skipped | выполнено |
 
 ## Как это читалось и что сознательно сужено
 
 - ТЗ автора описывает, что консоль сама разбирает JSON агента и вызывает API. ТЗ преподавателя требует HTTP внутри tool. В плане выбран второй вариант. Оба ограничения сохранены: набор методов фиксирован, консоль не выбирает метод сама, человек не видит сырой JSON.
-- Контракт преподавателя на английских метках Status/Action/Data/Errors. В `system.prompt` те же четыре поля по-русски: Статус, Действие, Результат, Ошибка. Значения `success` и `error` не переводились.
-- Уточнение и отказ — это `Статус: error`, потому что действие не выполнено. Это не сбой транспорта.
+- Итоговые метки совпадают с контрактом преподавателя: `Status`, `Action`, `Data`, `Errors` (`Prompts/system.prompt:40-43`, `ResponseFormatter.cs:112-115`). Текст внутри полей остаётся на русском. Значения статуса — `success` и `error`.
+- Уточнение и отказ — это `Status: error`, потому что действие не выполнено. Это не сбой транспорта.
 - Обновление частичное. Хотя бы одно поле кроме id. Очистить отчество или дату рождения в null нельзя.
 - В лог не пишутся фамилия и имя. В ответе человеку они есть, потому что он сам их запросил.
 - Хранилище не переживает перезапуск API.
-- Живой прогон на машине автора остаётся за ней: здесь нет её Ollama. Код клиента и opt-in тест для этого оставлены.
+- Живой прогон на Ollama остаётся за владельцем: в этой среде её нет. Сценарии 1–5 сняты со скриптового двойника. Код клиента, opt-in тест и пустой раздел «Живая модель на Ollama — заполняет владелец» оставлены для её результатов.

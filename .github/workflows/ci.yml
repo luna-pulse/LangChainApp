@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore PersonAgent.slnx --locked-mode
+
+      - name: Build
+        run: dotnet build PersonAgent.slnx --no-restore
+
+      - name: Test
+        run: dotnet test PersonAgent.slnx --no-build

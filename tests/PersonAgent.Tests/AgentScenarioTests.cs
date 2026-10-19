@@ -38,10 +38,10 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
         var result = await runner.RunAsync("Создай физлицо Иванов Иван");
 
         Assert.True(result.Success);
-        Assert.Contains("Статус: success", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Действие: CreatePerson", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Готово. Физлицо создано.", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Ошибка: нет", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Status: success", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Action: CreatePerson", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Data: Готово. Физлицо создано.", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Errors: нет", result.Text, StringComparison.Ordinal);
         Assert.DoesNotContain("{", result.Text, StringComparison.Ordinal);
         Assert.Equal(2, chat.Calls);
         Assert.Contains(logs.Messages, line => line.Contains("\"name\":\"CreatePerson\"", StringComparison.Ordinal) && line.Contains("\"firstName\":\"***\"", StringComparison.Ordinal));
@@ -73,8 +73,10 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
         var result = await runner.RunAsync($"Покажи физлицо {id}");
 
         Assert.True(result.Success);
-        Assert.Contains("Действие: GetPerson", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Физлицо найдено.", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Status: success", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Action: GetPerson", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Data: Физлицо найдено.", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Errors: нет", result.Text, StringComparison.Ordinal);
         Assert.Contains("Смирнов", result.Text, StringComparison.Ordinal);
         Assert.Contains(logs.Messages, line => line.Contains($"HTTP GET persons/{id} для GetPerson", StringComparison.Ordinal));
     }
@@ -100,9 +102,10 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
         var result = await runner.RunAsync($"Измени фамилию физлица {id} на Соколов");
 
         Assert.True(result.Success);
-        Assert.Contains("Действие: UpdatePerson", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Готово. Данные физлица изменены", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Ошибка: нет", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Status: success", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Action: UpdatePerson", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Data: Готово. Данные физлица изменены", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Errors: нет", result.Text, StringComparison.Ordinal);
         Assert.Contains(logs.Messages, line => line.Contains($"HTTP PUT persons/{id} для UpdatePerson", StringComparison.Ordinal));
         Assert.Contains(logs.Messages, line => line.Contains("Результат инструмента UpdatePerson: HTTP 200, успех да", StringComparison.Ordinal));
 
@@ -134,9 +137,11 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
         var result = await runner.RunAsync("Создай Волкова Мария и покажи список");
 
         Assert.True(result.Success);
-        Assert.Contains("CreatePerson", result.Text, StringComparison.Ordinal);
-        Assert.Contains("ListPersons", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Status: success", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Action: CreatePerson; ListPersons", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Data: Готово. Физлицо создано.", result.Text, StringComparison.Ordinal);
         Assert.Contains("Список физлиц получен.", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Errors: нет", result.Text, StringComparison.Ordinal);
         Assert.Equal(3, chat.Calls);
         Assert.Equal(2, result.Executions.Count);
         Assert.All(result.Executions, item => Assert.True(item.HttpCalled));
@@ -157,8 +162,10 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
         var result = await runner.RunAsync("Создай физлицо");
 
         Assert.False(result.Success);
-        Assert.Contains("Действие: уточнение", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Укажите фамилию и имя", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Status: error", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Action: уточнение", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Data: Укажите фамилию и имя", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Errors: недостаточно данных для вызова инструмента", result.Text, StringComparison.Ordinal);
         Assert.DoesNotContain("Готово", result.Text, StringComparison.Ordinal);
         Assert.Empty(handler.Requests);
         Assert.Equal(1, chat.Calls);
@@ -181,7 +188,7 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
 
         Assert.False(result.Success);
         Assert.Contains("не поддерживается", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Ошибка: инструмент не вызывался", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Errors: инструмент не вызывался", result.Text, StringComparison.Ordinal);
         Assert.DoesNotContain("Готово", result.Text, StringComparison.Ordinal);
         Assert.Empty(handler.Requests);
     }
@@ -277,7 +284,7 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
         var result = await runner.RunAsync("Покажи физлицо 999999");
 
         Assert.False(result.Success);
-        Assert.Contains("Статус: error", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Status: error", result.Text, StringComparison.Ordinal);
         Assert.Contains("Физлицо не найдено", result.Text, StringComparison.Ordinal);
         Assert.DoesNotContain("Готово", result.Text, StringComparison.Ordinal);
         Assert.Contains(logs.Messages, line => line.Contains("HTTP ответ GetPerson: 404", StringComparison.Ordinal));
@@ -348,7 +355,7 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
 
         Assert.False(result.Success);
         Assert.Contains("500", result.Text, StringComparison.Ordinal);
-        Assert.Contains("Действие: проверка ввода", result.Text, StringComparison.Ordinal);
+        Assert.Contains("Action: проверка ввода", result.Text, StringComparison.Ordinal);
         Assert.Equal(0, chat.Calls);
         Assert.Empty(handler.Requests);
     }
@@ -417,7 +424,7 @@ public sealed class AgentScenarioTests : IClassFixture<WebApplicationFactory<glo
         Assert.Contains("getperson", prompt, StringComparison.Ordinal);
         Assert.Contains("updateperson", prompt, StringComparison.Ordinal);
         Assert.Contains("listpersons", prompt, StringComparison.Ordinal);
-        Assert.Contains("Статус: success | error", prompt, StringComparison.Ordinal);
+        Assert.Contains("Status: success | error", prompt, StringComparison.Ordinal);
         Assert.Contains("{tools}", prompt, StringComparison.Ordinal);
         Assert.Contains("{input}", prompt, StringComparison.Ordinal);
         Assert.Contains("{history}", prompt, StringComparison.Ordinal);

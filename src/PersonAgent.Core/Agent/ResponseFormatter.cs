@@ -109,10 +109,10 @@ public static class ResponseFormatter
         var text = string.Join(
             Environment.NewLine,
             [
-                $"Статус: {status}",
-                $"Действие: {OneLine(action)}",
-                $"Результат: {OneLine(result)}",
-                $"Ошибка: {OneLine(error)}",
+                $"Status: {status}",
+                $"Action: {OneLine(action)}",
+                $"Data: {OneLine(result)}",
+                $"Errors: {OneLine(error)}",
             ]);
         return new AgentRunResult(status, text, executions);
     }
